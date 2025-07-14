@@ -55,6 +55,21 @@
       color: #004b8d;
     }
 
+    .form-group {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+
     .btn-novo {
       margin-top: 30px;
       padding: 12px 20px;
@@ -82,24 +97,63 @@
   <div id="reader"></div>
   <div id="output">Aguardando leitura do QR Code...</div>
 
+  <div class="form-group">
+    <label for="km">Quilometragem atual:</label>
+    <input type="number" id="km" placeholder="Digite a KM do veículo">
+  </div>
+
+  <button class="btn-novo" onclick="salvarRegistro()">Salvar Registro</button>
   <button class="btn-novo" onclick="novoRegistro()">Novo Registro</button>
 
   <script>
     const output = document.getElementById('output');
+    const kmInput = document.getElementById('km');
+    let veiculoId = null;
 
     function novoRegistro() {
+      veiculoId = null;
       output.innerText = 'Aguardando leitura do QR Code...';
+      kmInput.value = '';
+    }
+
+    function salvarRegistro() {
+      const kmAtual = parseFloat(kmInput.value);
+      if (!veiculoId || isNaN(kmAtual)) {
+        alert('Escaneie o veículo e insira a quilometragem!');
+        return;
+      }
+
+      const registros = JSON.parse(localStorage.getItem('registros') || '{}');
+      const anterior = registros[veiculoId];
+
+      let mensagem = `Veículo ${veiculoId} - KM Atual: ${kmAtual}`;
+
+      if (anterior) {
+        const distancia = kmAtual - anterior.km;
+        const litros = anterior.litros || 10; // Simulado por enquanto
+        const media = (distancia / litros).toFixed(2);
+        mensagem += `\nRodou: ${distancia} km \nLitros: ${litros} L \nMédia: ${media} km/L`;
+      }
+
+      registros[veiculoId] = {
+        km: kmAtual,
+        litros: 10 // Simulado, depois será lido da bomba
+      };
+
+      localStorage.setItem('registros', JSON.stringify(registros));
+      alert('Registro salvo com sucesso!\n' + mensagem);
+      novoRegistro();
     }
 
     function onScanSuccess(decodedText, decodedResult) {
+      veiculoId = decodedText;
       output.innerText = `Veículo identificado: ${decodedText}`;
     }
 
     const html5QrcodeScanner = new Html5QrcodeScanner(
-      "reader", { fps: 10, qrbox: 250 }, /* verbose= */ false);
+      "reader", { fps: 10, qrbox: 250 }, false);
 
     html5QrcodeScanner.render(onScanSuccess);
   </script>
 </body>
 </html>
-
