@@ -1,66 +1,105 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sistema de Abastecimento Automático</title>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Abastecimento - Gidion</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    #qr-reader { width: 300px; margin-bottom: 20px; }
-    #info { margin-top: 20px; padding: 10px; border: 1px solid #ccc; width: 320px; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f2f2f2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    header {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #004b8d;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    header img {
+      height: 40px;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    #reader {
+      width: 100%;
+      max-width: 600px;
+      border: 2px dashed #ccc;
+      border-radius: 10px;
+      background: white;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    #output {
+      margin-top: 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #004b8d;
+    }
+
+    .btn-novo {
+      margin-top: 30px;
+      padding: 12px 20px;
+      background-color: #004b8d;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn-novo:hover {
+      background-color: #003366;
+    }
   </style>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
-  <h2>Leitor de QR Code - Identificação de Veículo</h2>
-  <div id="qr-reader"></div>
-  <div id="info">
-    <p><strong>Veículo:</strong> <span id="veiculo">---</span></p>
-    <p><strong>Hora:</strong> <span id="hora">---</span></p>
-    <p><strong>Quilometragem:</strong> <input type="number" id="km" /></p>
-    <button onclick="simularAbastecimento()">Iniciar Abastecimento</button>
-  </div>
-  <div id="resultado"></div>
+  <header>
+    <img src="https://www.gidion.com.br/wp-content/uploads/2017/03/logo.png" alt="Gidion Logo">
+    <h1>Registro de Abastecimento</h1>
+  </header>
+
+  <div id="reader"></div>
+  <div id="output">Aguardando leitura do QR Code...</div>
+
+  <button class="btn-novo" onclick="novoRegistro()">Novo Registro</button>
 
   <script>
-    function atualizarHora() {
-      const agora = new Date();
-      return agora.toLocaleTimeString('pt-BR');
+    const output = document.getElementById('output');
+
+    function novoRegistro() {
+      output.innerText = 'Aguardando leitura do QR Code...';
     }
 
-    let veiculoAtual = "";
-
-    function onScanSuccess(decodedText) {
-      document.getElementById("veiculo").innerText = decodedText;
-      document.getElementById("hora").innerText = atualizarHora();
-      veiculoAtual = decodedText;
+    function onScanSuccess(decodedText, decodedResult) {
+      output.innerText = `Veículo identificado: ${decodedText}`;
     }
 
-    const qrScanner = new Html5Qrcode("qr-reader");
-    qrScanner.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: 250 },
-      onScanSuccess
-    );
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader", { fps: 10, qrbox: 250 }, /* verbose= */ false);
 
-    function simularAbastecimento() {
-      const km = document.getElementById("km").value;
-      if (!veiculoAtual || !km) {
-        alert("Escaneie o veículo e preencha a KM.");
-        return;
-      }
-      const litros = (Math.random() * 50 + 10).toFixed(2); // simulação entre 10 e 60 L
-      const hora = atualizarHora();
-      const resultado = `Registro salvo:<br>
-        Veículo: ${veiculoAtual}<br>
-        KM: ${km}<br>
-        Volume abastecido: ${litros} litros<br>
-        Hora: ${hora}`;
-      document.getElementById("resultado").innerHTML = resultado;
-
-      // Aqui você pode fazer um POST para seu backend com os dados
-      // ou salvar localmente numa planilha, banco etc.
-    }
+    html5QrcodeScanner.render(onScanSuccess);
   </script>
 </body>
 </html>
+
