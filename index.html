@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registro de Abastecimento - Gidion</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     body {
       margin: 0;
@@ -71,7 +74,7 @@
     }
 
     .btn-novo {
-      margin-top: 30px;
+      margin-top: 20px;
       padding: 12px 20px;
       background-color: #004b8d;
       color: white;
@@ -86,7 +89,6 @@
       background-color: #003366;
     }
   </style>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
   <header>
@@ -106,6 +108,19 @@
   <button class="btn-novo" onclick="novoRegistro()">Novo Registro</button>
 
   <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDD29gmBHaB2J72n40BgVP_t4cqkz4hGtE",
+      authDomain: "abastecimento-gidion.firebaseapp.com",
+      databaseURL: "https://abastecimento-gidion-default-rtdb.firebaseio.com",
+      projectId: "abastecimento-gidion",
+      storageBucket: "abastecimento-gidion.firebasestorage.app",
+      messagingSenderId: "551622251819",
+      appId: "1:551622251819:web:0e31ae7c497d58811b216e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
     const output = document.getElementById('output');
     const kmInput = document.getElementById('km');
     let veiculoId = null;
@@ -116,44 +131,21 @@
       kmInput.value = '';
     }
 
-    function salvarRegistro() {
+    async function salvarRegistro() {
       const kmAtual = parseFloat(kmInput.value);
       if (!veiculoId || isNaN(kmAtual)) {
         alert('Escaneie o veículo e insira a quilometragem!');
         return;
       }
 
-      const registros = JSON.parse(localStorage.getItem('registros') || '{}');
-      const anterior = registros[veiculoId];
+      const veiculoRef = database.ref(`veiculos/${veiculoId}`);
+      const snapshot = await veiculoRef.get();
+      const dadosAntigos = snapshot.exists() ? snapshot.val() : null;
 
-      let mensagem = `Veículo ${veiculoId} - KM Atual: ${kmAtual}`;
+      const litros = 10; // valor simulado por enquanto
+      const timestamp = new Date().toISOString();
+      let distancia = null;
+      let media = null;
 
-      if (anterior) {
-        const distancia = kmAtual - anterior.km;
-        const litros = anterior.litros || 10; // Simulado por enquanto
-        const media = (distancia / litros).toFixed(2);
-        mensagem += `\nRodou: ${distancia} km \nLitros: ${litros} L \nMédia: ${media} km/L`;
-      }
-
-      registros[veiculoId] = {
-        km: kmAtual,
-        litros: 10 // Simulado, depois será lido da bomba
-      };
-
-      localStorage.setItem('registros', JSON.stringify(registros));
-      alert('Registro salvo com sucesso!\n' + mensagem);
-      novoRegistro();
-    }
-
-    function onScanSuccess(decodedText, decodedResult) {
-      veiculoId = decodedText;
-      output.innerText = `Veículo identificado: ${decodedText}`;
-    }
-
-    const html5QrcodeScanner = new Html5QrcodeScanner(
-      "reader", { fps: 10, qrbox: 250 }, false);
-
-    html5QrcodeScanner.render(onScanSuccess);
-  </script>
-</body>
-</html>
+      if (dadosAntigos && dadosAntigos.km) {
+        distanc
