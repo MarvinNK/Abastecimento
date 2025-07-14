@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Abastecimento Automático</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #qr-reader { width: 300px; margin-bottom: 20px; }
+    #info { margin-top: 20px; padding: 10px; border: 1px solid #ccc; width: 320px; }
+  </style>
+</head>
+<body>
+  <h2>Leitor de QR Code - Identificação de Veículo</h2>
+  <div id="qr-reader"></div>
+  <div id="info">
+    <p><strong>Veículo:</strong> <span id="veiculo">---</span></p>
+    <p><strong>Hora:</strong> <span id="hora">---</span></p>
+    <p><strong>Quilometragem:</strong> <input type="number" id="km" /></p>
+    <button onclick="simularAbastecimento()">Iniciar Abastecimento</button>
+  </div>
+  <div id="resultado"></div>
+
+  <script>
+    function atualizarHora() {
+      const agora = new Date();
+      return agora.toLocaleTimeString('pt-BR');
+    }
+
+    let veiculoAtual = "";
+
+    function onScanSuccess(decodedText) {
+      document.getElementById("veiculo").innerText = decodedText;
+      document.getElementById("hora").innerText = atualizarHora();
+      veiculoAtual = decodedText;
+    }
+
+    const qrScanner = new Html5Qrcode("qr-reader");
+    qrScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      onScanSuccess
+    );
+
+    function simularAbastecimento() {
+      const km = document.getElementById("km").value;
+      if (!veiculoAtual || !km) {
+        alert("Escaneie o veículo e preencha a KM.");
+        return;
+      }
+      const litros = (Math.random() * 50 + 10).toFixed(2); // simulação entre 10 e 60 L
+      const hora = atualizarHora();
+      const resultado = `Registro salvo:<br>
+        Veículo: ${veiculoAtual}<br>
+        KM: ${km}<br>
+        Volume abastecido: ${litros} litros<br>
+        Hora: ${hora}`;
+      document.getElementById("resultado").innerHTML = resultado;
+
+      // Aqui você pode fazer um POST para seu backend com os dados
+      // ou salvar localmente numa planilha, banco etc.
+    }
+  </script>
+</body>
+</html>
